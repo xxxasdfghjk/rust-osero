@@ -1,8 +1,6 @@
 use crate::osero::game;
 use crate::osero::util;
 
-
-
 const INITIAL_WHITE: u64 = 1 << 27 | 1 << 36;
 const INITIAL_BLACK: u64 = 1 << 28 | 1 << 35;
 

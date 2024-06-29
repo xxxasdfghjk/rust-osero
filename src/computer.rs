@@ -3,9 +3,8 @@ use std::cmp::Ordering;
 use crate::osero::game::*;
 use crate::osero::util::*;
 use rand::prelude::SliceRandom;
-const MAX_TRY_COUNT: i32 = 50000;
 const MAX_NODE_TRY_COUNT: f64 = 500.0;
-
+const MAX_TRY_COUNT: i32 = 50000;
 pub struct Node {
     pub last_hand: u64,
     pub color: i32,
@@ -61,7 +60,11 @@ pub fn tree_size(node: &Node) -> i32 {
 }
 
 impl Tree {
-    pub fn calc_next(&mut self, node: &mut Node) -> u64 {
+    pub fn calc_next(&mut self, node: &mut Node, max_try_count: Option<i32>) -> u64 {
+        let max_try_count = match max_try_count {
+            Some(val) => val,
+            None => MAX_TRY_COUNT,
+        };
         self.total_try_count = 0.0;
         let available = split_bit(&available_places(&node.boards, &node.color));
         node.children = available
@@ -75,7 +78,7 @@ impl Tree {
                 last_hand: pos,
             })
             .collect::<Vec<Node>>();
-        for _i in 1..MAX_TRY_COUNT {
+        for _i in 1..max_try_count {
             self.total_try_count += 1.0;
             self.traverse_node(node);
         }
