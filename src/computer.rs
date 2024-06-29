@@ -1,8 +1,14 @@
 use std::cmp::Ordering;
+use std::path::Path;
+use std::path::PathBuf;
 
+use crate::book::Book;
 use crate::osero::game::*;
 use crate::osero::util::*;
 use rand::prelude::SliceRandom;
+use rand::seq::IteratorRandom;
+use rusqlite::params;
+use rusqlite::Connection;
 const MAX_NODE_TRY_COUNT: f64 = 500.0;
 const MAX_TRY_COUNT: i32 = 50000;
 pub struct Node {
@@ -59,8 +65,77 @@ pub fn tree_size(node: &Node) -> i32 {
     return res;
 }
 
+fn get_relative_path(relative_path: &str) -> PathBuf {
+    let current_file_path = Path::new(file!());
+    let current_dir = current_file_path.parent().unwrap();
+    current_dir.join(relative_path)
+}
+
+fn convert_cell_to_num(cell: &str) -> u64 {
+    let cell = match cell.chars().nth(0) {
+        Some('A') => 0,
+        Some('B') => 1,
+        Some('C') => 2,
+        Some('D') => 3,
+        Some('E') => 4,
+        Some('F') => 5,
+        Some('G') => 6,
+        Some('H') => 7,
+        _ => panic!(),
+    } + match cell.chars().nth(1) {
+        Some('1') => 0,
+        Some('2') => 8,
+        Some('3') => 16,
+        Some('4') => 24,
+        Some('5') => 32,
+        Some('6') => 40,
+        Some('7') => 48,
+        Some('8') => 56,
+        _ => panic!(),
+    };
+    return 1 << cell;
+}
+
+pub fn get_next_hand_from_book(history: &str) -> Option<u64> {
+    let path = "./../assets/book";
+    let db_path = get_relative_path(path);
+    let con = Connection::open(&db_path).unwrap();
+    let mut statement = con
+        .prepare("select id,name,moves from book where moves like ?1")
+        .unwrap();
+    let res = statement
+        .query_map(params![format!("{history}%")], |row| {
+            Ok(Book {
+                name: row.get(1).unwrap(),
+                id: row.get(0).unwrap(),
+                moves: row.get(2).unwrap(),
+            })
+        })
+        .unwrap()
+        .filter_map(Result::ok)
+        .filter(|x| x.moves.len() > history.len())
+        .collect::<Vec<Book>>();
+    let mut rng = rand::thread_rng();
+    let choice = res.choose(&mut rng);
+    println!(
+        "book founded : {} count , hisotry : {} ",
+        res.len(),
+        history
+    );
+    if let Some(book) = choice {
+        println!("book choice : {}", book.name);
+        return Some(convert_cell_to_num(&book.moves[history.len()..][0..2]));
+    } else {
+        return None;
+    }
+}
+
 impl Tree {
-    pub fn calc_next(&mut self, node: &mut Node, max_try_count: Option<i32>) -> u64 {
+    pub fn calc_next(&mut self, node: &mut Node, max_try_count: Option<i32>, history: &str) -> u64 {
+        let book_hand = get_next_hand_from_book(history);
+        if let Some(hand) = book_hand {
+            return hand;
+        }
         let max_try_count = match max_try_count {
             Some(val) => val,
             None => MAX_TRY_COUNT,
