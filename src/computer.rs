@@ -158,7 +158,7 @@ impl Tree {
             self.traverse_node(node);
         }
         node.children.sort_by(|n1, n2| {
-            if n2.point - n1.point > 0.0 {
+            if n2.point / n2.node_try_count - n1.point / n2.node_try_count > 0.0 {
                 Ordering::Greater
             } else {
                 Ordering::Less
@@ -166,7 +166,11 @@ impl Tree {
         });
 
         for child in &node.children {
-            println!("{} {}", child.point, map_bit_index(&child.last_hand));
+            println!(
+                "{} {}",
+                child.point / child.node_try_count,
+                map_bit_index(&child.last_hand)
+            );
         }
         println!("tree size :{}", tree_size(&node));
         node.children[0].last_hand
