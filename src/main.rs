@@ -1,6 +1,7 @@
-const INITIAL_WHITE: u64 = 1 << 27 | 1 << 36;
-const INITIAL_BLACK: u64 = 1 << 28 | 1 << 35;
+pub const INITIAL_WHITE: u64 = 1 << 27 | 1 << 36;
+pub const INITIAL_BLACK: u64 = 1 << 28 | 1 << 35;
 use rust_osero::computer;
+use rust_osero::computer::convert_num_to_cell;
 use rust_osero::osero;
 use std::io;
 fn read_buffer() -> u32 {
@@ -22,6 +23,7 @@ fn read_buffer_str() -> String {
 fn play() {
     let mut board: (u64, u64) = (INITIAL_WHITE, INITIAL_BLACK);
     let mut current_color = 1;
+    let mut history = "".to_string();
     loop {
         let is_end = osero::game::is_end(&board);
         if is_end != -1 {
@@ -62,12 +64,15 @@ fn play() {
                     boards: board,
                     children: vec![],
                 }),
+                Some(2000),
+                &history,
             );
             let input = if current_color == 1 {
                 1 << read_buffer() as u64
             } else {
                 suggest
             };
+            history.push_str(&convert_num_to_cell(input));
             board = osero::game::reverse_stone_new(&board, &current_color, &(input));
             current_color = if current_color == 0 { 1 } else { 0 };
             break;

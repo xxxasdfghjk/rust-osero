@@ -9,7 +9,7 @@ use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
 use rusqlite::params;
 use rusqlite::Connection;
-const MAX_NODE_TRY_COUNT: f64 = 1000.0;
+const MAX_NODE_TRY_COUNT: f64 = 100.0;
 const MAX_TRY_COUNT: i32 = 50000;
 pub struct Node {
     pub last_hand: u64,
@@ -94,6 +94,30 @@ fn convert_cell_to_num(cell: &str) -> u64 {
         _ => panic!(),
     };
     return 1 << cell;
+}
+
+pub fn most_right_bit_index(bits: u64) -> i32 {
+    for i in 0..64 {
+        if bits & (1 << i) > 0 {
+            return i;
+        }
+    }
+    return -1;
+}
+
+pub fn convert_num_to_cell(num: u64) -> String {
+    let index = most_right_bit_index(num);
+    return format!(
+        "{}{}",
+        "ABCDEFGH"
+            .chars()
+            .nth(usize::try_from(index % 8).unwrap())
+            .unwrap(),
+        "12345678"
+            .chars()
+            .nth(usize::try_from(index / 8).unwrap())
+            .unwrap()
+    );
 }
 
 pub fn get_next_hand_from_book(history: &str) -> Option<u64> {
