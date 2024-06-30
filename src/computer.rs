@@ -9,7 +9,7 @@ use rand::prelude::SliceRandom;
 use rand::seq::IteratorRandom;
 use rusqlite::params;
 use rusqlite::Connection;
-const MAX_NODE_TRY_COUNT: f64 = 500.0;
+const MAX_NODE_TRY_COUNT: f64 = 1000.0;
 const MAX_TRY_COUNT: i32 = 50000;
 pub struct Node {
     pub last_hand: u64,
